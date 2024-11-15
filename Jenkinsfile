@@ -15,7 +15,7 @@ pipeline {
         stage('Build Image') {
             steps {
                 sh 'export PORT=${PORT}'
-                sh 'docker build -t ${DOCKER_HUB_PAT_USR}/${DOCKER_IMAGE}'
+                sh 'docker build -t ${DOCKER_HUB_PAT_USR}/${DOCKER_IMAGE} .'
            }
         }
         stage('Deploy Images'){
@@ -27,7 +27,7 @@ pipeline {
         }
         stage('Run Container') {
             steps {
-                sh 'docker run -d -p 80:$PORT -e PORT=${PORT} ${DOCKER_IMAGE}'
+                sh 'docker run -d -p 80:$PORT -e PORT=${PORT} ${DOCKER_HUB_PAT_USR}/${DOCKER_IMAGE}'
             }
         }
     }   
