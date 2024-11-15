@@ -11,6 +11,12 @@ pipeline {
                 sh 'docker rm -f $(docker ps -aq) || true'
                 sh 'docker rmi -f $(docker images) || true'
            }
+        } 
+        stage('Run Tests'){
+            steps {
+                sh 'pip install -r "requirements.txt"'
+                sh 'python lbg.test.py'
+            }
         }        
         stage('Build Image') {
             steps {
