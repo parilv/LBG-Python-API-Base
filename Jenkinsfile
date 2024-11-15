@@ -25,7 +25,7 @@ pipeline {
         }
         stage('Run Tests'){
             steps {                
-                sh 'python lbg.test.py'
+                sh 'python3 lbg.test.py'
             }
         }        
         stage('Deploy Images'){
