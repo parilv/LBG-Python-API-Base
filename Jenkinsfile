@@ -11,19 +11,23 @@ pipeline {
                 sh 'docker rm -f $(docker ps -aq) || true'
                 sh 'docker rmi -f $(docker images) || true'
            }
-        } 
-        stage('Run Tests'){
-            steps {
-                sh 'pip install -r "requirements.txt"'
-                sh 'python lbg.test.py'
-            }
-        }        
+        }         
         stage('Build Image') {
             steps {
                 sh 'export PORT=${PORT}'
                 sh 'docker build -t ${DOCKER_HUB_PAT_USR}/${DOCKER_IMAGE} .'
            }
         }
+         stage('Run Container') {
+            steps {
+                sh 'docker run -d -p 80:$PORT -e PORT=${PORT} ${DOCKER_HUB_PAT_USR}/${DOCKER_IMAGE}'
+            }
+        }
+        stage('Run Tests'){
+            steps {                
+                sh 'python lbg.test.py'
+            }
+        }        
         stage('Deploy Images'){
             steps {
                 sh 'docker login -u ${DOCKER_HUB_PAT_USR} -p ${DOCKER_HUB_PAT_PSW}'
@@ -31,10 +35,6 @@ pipeline {
                 sh 'docker logout'
             }
         }
-        stage('Run Container') {
-            steps {
-                sh 'docker run -d -p 80:$PORT -e PORT=${PORT} ${DOCKER_HUB_PAT_USR}/${DOCKER_IMAGE}'
-            }
-        }
+       
     }   
 }
