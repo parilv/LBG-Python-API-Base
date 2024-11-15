@@ -18,6 +18,13 @@ pipeline {
                 sh 'docker build -t ${DOCKER_HUB_PAT_USR}/${DOCKER_IMAGE}'
            }
         }
+        stage('Deploy Images'){
+            steps {
+                sh 'docker login -u ${DOCKER_HUB_PAT_USR} -p ${DOCKER_HUB_PAT_PSW}'
+                sh 'docker push ${DOCKER_HUB_PAT_USR}/${DOCKER_IMAGE}'                
+                sh 'docker logout'
+            }
+        }
         stage('Run Container') {
             steps {
                 sh 'docker run -d -p 80:$PORT -e PORT=${PORT} ${DOCKER_IMAGE}'
