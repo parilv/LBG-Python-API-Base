@@ -1,40 +1,88 @@
 pipeline {
     agent any
-    environment {
-        DOCKER_IMAGE="lbg"
-        DOCKER_HUB_PAT=credentials('DOCKER_HUB_PAT')
+    environment {       
         PORT=5001
     }
-    stages {
-        stage('Clean up previous artifacts') {
+    stages {       
+        stage('Init') {
             steps {
-                sh 'docker rm -f $(docker ps -aq) || true'
-                sh 'docker rmi -f $(docker images) || true'
-           }
-        }         
+                script {
+                    if (env.GIT_BRANCH == 'origin/main') {
+                        sh '''
+                        kubectl create ns production || echo "------- Production Namespace Already Exists -------"
+                        '''
+                    } else if (env.GIT_BRANCH == 'origin/dev') {
+                        sh '''
+                        kubectl create ns development || echo "------- Development Namespace Already Exists -------"
+                        '''
+                    } else {
+                        sh'echo "Unknown branch"'
+                    }
+                }
+            }
+        }
         stage('Build Image') {
             steps {
                 sh 'export PORT=${PORT}'
                 sh 'docker build -t ${DOCKER_HUB_PAT_USR}/${DOCKER_IMAGE} .'
            }
-        }
-         stage('Run Container') {
-            steps {
-                sh 'docker run -d -p 80:$PORT -e PORT=${PORT} ${DOCKER_HUB_PAT_USR}/${DOCKER_IMAGE}'
-            }
-        }
+           steps {
+                script {
+                    if (env.GIT_BRANCH == 'origin/main'){
+                        sh '''
+                        docker build -t parilvadher/lbg-python:latest -t parilvadher/lbg-python:v${BUILD_NUMBER} .
+                        '''
+                    } else if (env.GIT_BRANCH == 'origin/dev') {
+                        sh '''
+                        docker build -t parilvadher/lbg-python-dev:latest -t parilvadher/lbg-python-dev:v${BUILD_NUMBER} .
+                        '''
+                    }
+                }
+            } 
+        }        
         stage('Run Tests'){
             steps {                
                 sh 'python3 lbg.test.py'
             }
         }        
-        stage('Deploy Images'){
+        stage('Push Images') {
             steps {
-                sh 'docker login -u ${DOCKER_HUB_PAT_USR} -p ${DOCKER_HUB_PAT_PSW}'
-                sh 'docker push ${DOCKER_HUB_PAT_USR}/${DOCKER_IMAGE}'                
-                sh 'docker logout'
+
+                script {
+                    if (env.GIT_BRANCH == 'origin/main') {
+                        sh '''
+                        docker push parilvadher/lbg-python:latest
+                        docker push parilvadher/lbg-python:v${BUILD_NUMBER}
+                        '''
+                    } else if (env.GIT_BRANCH == 'origin/dev') {
+                        sh '''
+                        docker push parilvadher/lbg-python-dev:latest
+                        docker push parilvadher/lbg-python-dev:v${BUILD_NUMBER}
+                        '''
+                    } else {
+                        sh'echo "Unknown branch"'
+                    }
+                }
             }
         }
-       
+        stage('Deploy') {
+            steps {
+                script {
+                    if (env.GIT_BRANCH == 'origin/main') {
+                        sh'''
+                        kubectl apply -f ./kubernetes -n production
+                        kubectl set image deployment/flask-deployment flask-container=parilvadher/lbg-python:v${BUILD_NUMBER} -n production
+                        '''
+                    } else if (env.GIT_BRANCH == 'origin/dev') {
+                        sh'''
+                        kubectl apply -f ./kubernetes -n development
+                        kubectl set image deployment/flask-deployment flask-container=parilvadher/lbg-python-dev:v${BUILD_NUMBER} -n development
+                        '''
+                    } else {
+                        sh'echo "Unknown branch"'
+                    }
+                }
+            }
+        }       
     }   
 }
