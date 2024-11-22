@@ -23,7 +23,7 @@ pipeline {
                 sh 'docker rm -f $(docker ps -aq) || true'
                 sh 'docker rmi -f $(docker images) || true'
            }
-        } 
+        }       
         stage('Build Image') {            
            steps {
                 script {
@@ -38,7 +38,13 @@ pipeline {
                     }
                 }
             } 
-        }        
+        }
+        stage('Run Tests') {
+            steps {
+                sh 'docker run -d -p 80:8080 -e PORT=8080 parilvadher/lbg-python:latest'
+                sh 'python3 lbg.test.py'
+            }
+        }
         stage('Push Images') {
             steps {
 
