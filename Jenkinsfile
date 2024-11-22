@@ -39,16 +39,20 @@ pipeline {
                 }
             } 
         }
-        stage('Run Container') {
+        stage('Run Tests') {
             steps {
                 script {
                     if (env.GIT_BRANCH == 'origin/main'){
                         sh '''                        
                         docker run -d -p 80:8080 -e PORT=8080 parilvadher/lbg-python:latest
+                        python3 lbg.test.py
+                        docker stop $(docker ps -q)
                         '''
                     } else if (env.GIT_BRANCH == 'origin/dev') {
                         sh '''
                         docker run -d -p 80:8080 -e PORT=8080 parilvadher/lbg-python-dev:latest
+                        python3 lbg.test.py
+                        docker stop $(docker ps -q)
                         '''
                     }
                 }
