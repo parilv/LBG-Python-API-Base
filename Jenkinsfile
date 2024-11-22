@@ -41,8 +41,9 @@ pipeline {
         }
         stage('Run Tests') {
             steps {
-                sh 'docker run -d -p 80:8080 -e PORT=8080 parilvadher/lbg-python:latest'
+                sh 'docker run -d --name lbg-test-container -p 80:5500 -e PORT=5500 parilvadher/lbg-python:latest'
                 sh 'python3 lbg.test.py'
+                sh 'docker stop lbg-test-container'
             }
         }
         stage('Push Images') {
