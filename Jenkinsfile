@@ -1,8 +1,5 @@
 pipeline {
-    agent any
-    environment {       
-        PORT=5001
-    }
+    agent any   
     stages {       
         stage('Init') {
             steps {
@@ -21,6 +18,12 @@ pipeline {
                 }
             }
         }
+        stage('Clean up previous artifacts') {
+            steps {
+                sh 'docker rm -f $(docker ps -aq) || true'
+                sh 'docker rmi -f $(docker images) || true'
+           }
+        } 
         stage('Build Image') {            
            steps {
                 script {
@@ -35,8 +38,20 @@ pipeline {
                     }
                 }
             } 
-        }        
-           
+        }
+        stage('Run Container') {
+            steps {
+                if (env.GIT_BRANCH == 'origin/main'){
+                    sh '''                        
+                    docker run -d -p 80:8080 -e PORT=8080 parilvadher/lbg-python:latest
+                    '''
+                } else if (env.GIT_BRANCH == 'origin/dev') {
+                    sh '''
+                    docker run -d -p 80:8080 -e PORT=8080 parilvadher/lbg-python-dev:latest
+                    '''
+                }
+            }
+        }
         stage('Push Images') {
             steps {
 
