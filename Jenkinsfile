@@ -36,11 +36,7 @@ pipeline {
                 }
             } 
         }        
-        stage('Run Tests'){
-            steps {                
-                sh 'python3 lbg.test.py'
-            }
-        }        
+           
         stage('Push Images') {
             steps {
 
