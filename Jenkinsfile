@@ -41,14 +41,16 @@ pipeline {
         }
         stage('Run Container') {
             steps {
-                if (env.GIT_BRANCH == 'origin/main'){
-                    sh '''                        
-                    docker run -d -p 80:8080 -e PORT=8080 parilvadher/lbg-python:latest
-                    '''
-                } else if (env.GIT_BRANCH == 'origin/dev') {
-                    sh '''
-                    docker run -d -p 80:8080 -e PORT=8080 parilvadher/lbg-python-dev:latest
-                    '''
+                script {
+                    if (env.GIT_BRANCH == 'origin/main'){
+                        sh '''                        
+                        docker run -d -p 80:8080 -e PORT=8080 parilvadher/lbg-python:latest
+                        '''
+                    } else if (env.GIT_BRANCH == 'origin/dev') {
+                        sh '''
+                        docker run -d -p 80:8080 -e PORT=8080 parilvadher/lbg-python-dev:latest
+                        '''
+                    }
                 }
             }
         }
