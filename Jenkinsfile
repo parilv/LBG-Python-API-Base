@@ -21,11 +21,7 @@ pipeline {
                 }
             }
         }
-        stage('Build Image') {
-            steps {
-                sh 'export PORT=${PORT}'
-                sh 'docker build -t ${DOCKER_HUB_PAT_USR}/${DOCKER_IMAGE} .'
-           }
+        stage('Build Image') {            
            steps {
                 script {
                     if (env.GIT_BRANCH == 'origin/main'){
