@@ -44,11 +44,13 @@ pipeline {
             steps {
                 script {
                     if (env.GIT_BRANCH == 'origin/main'){
-                        sh 'docker run -d --name lbg-test-container -p 80:8080 -e PORT=8080 parilvadher/lbg-python:latest'
+                        sh 'docker run -d --name lbg-test-container -p 80:5500 -e PORT=5500 parilvadher/lbg-python:latest'
+                        sh 'sleep 3'
                         sh 'python3 lbg.test.py'
                         sh 'docker stop lbg-test-container'                        
                     } else if (env.GIT_BRANCH == 'origin/dev') {
-                        sh 'docker run -d --name lbg-test-container-dev -p 80:8080 -e PORT=8080 parilvadher/lbg-python-dev:latest'
+                        sh 'docker run -d --name lbg-test-container-dev -p 80:5500 -e PORT=5500 parilvadher/lbg-python-dev:latest'
+                        sh 'sleep 3'
                         sh 'python3 lbg.test.py'
                         sh 'docker stop lbg-test-container-dev'                        
                     }
